@@ -17,13 +17,21 @@ export const simulateAuth = (credentials: Record<string, string>, userType: stri
     key => credentials[key] === defaults[key as keyof typeof defaults]
   );
 
+  // Generate an email based on user type
+  const generateEmail = () => {
+    if (userType === 'public' && 'email' in defaults) {
+      return defaults.email;
+    }
+    return `${userType}@dharma.com`;
+  };
+
   return {
     isAuthenticated,
     userData: isAuthenticated ? {
       id: `${userType}-123`,
       name: `${userType.charAt(0).toUpperCase() + userType.slice(1)} User`,
       role: userType,
-      email: userType === 'public' ? defaults.email : `${userType}@dharma.com`
+      email: generateEmail()
     } : null
   };
 };
