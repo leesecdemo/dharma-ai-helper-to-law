@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,31 +11,47 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Shield } from "lucide-react";
+import { AlertCircle, Shield } from "lucide-react";
+import { simulateAuth } from "@/utils/authUtils";
 
 const PoliceLogin = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     badgeNumber: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Simulate API call
     setTimeout(() => {
-      toast({
-        title: "Login successful",
-        description: "Welcome to the Police Portal.",
-      });
+      const { isAuthenticated } = simulateAuth(formData, "police");
+      
+      if (isAuthenticated) {
+        toast({
+          title: "Login successful",
+          description: "Welcome to the Police Portal.",
+        });
+        navigate("/police/dashboard");
+      } else {
+        setError("Invalid badge number or password");
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: "Please check your credentials and try again.",
+        });
+      }
       setIsLoading(false);
     }, 1000);
   };
@@ -86,6 +102,18 @@ const PoliceLogin = () => {
                 onChange={handleChange}
                 required
               />
+            </div>
+            
+            {error && (
+              <div className="flex items-center gap-2 text-destructive text-sm">
+                <AlertCircle className="h-4 w-4" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="pt-2 text-xs text-muted-foreground">
+              <p>Use demo credentials:</p>
+              <p>Badge Number: <strong>PL1234</strong>, Password: <strong>police123</strong></p>
             </div>
           </CardContent>
           

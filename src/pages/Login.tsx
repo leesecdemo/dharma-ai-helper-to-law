@@ -1,24 +1,37 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { AlertCircle } from "lucide-react";
+import { simulateAuth } from "@/utils/authUtils";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login request
+    setError("");
+    
+    // Check login with default credentials
     setTimeout(() => {
-      console.log("Login attempted with:", { email });
+      const { isAuthenticated } = simulateAuth({ email, password }, "public");
+      
+      if (isAuthenticated) {
+        console.log("Login successful with:", { email });
+        navigate("/public/dashboard");
+      } else {
+        setError("Invalid email or password");
+      }
       setIsLoading(false);
     }, 1000);
   };
@@ -82,7 +95,10 @@ const Login = () => {
                         id="email"
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setError("");
+                        }}
                         required
                         placeholder="you@example.com"
                       />
@@ -98,11 +114,27 @@ const Login = () => {
                         id="password"
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setError("");
+                        }}
                         required
                         placeholder="••••••••"
                       />
                     </div>
+                    
+                    {error && (
+                      <div className="flex items-center gap-2 text-destructive text-sm">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground">
+                      <p>Use demo credentials:</p>
+                      <p>Email: <strong>user@dharma.com</strong>, Password: <strong>password123</strong></p>
+                    </div>
+                    
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Logging in..." : "Log In"}
                     </Button>
