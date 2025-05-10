@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Users, Folder, Clock, ArrowRight } from "lucide-react";
+import { FileText, Users, Folder, Clock, ArrowRight, MessageSquare } from "lucide-react";
 
 const PoliceDashboard = () => {
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ const PoliceDashboard = () => {
           <p className="text-muted-foreground">Manage and track cases, evidence, and reports.</p>
         </div>
         
+        {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -109,8 +110,22 @@ const PoliceDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm text-muted-foreground">{item.updated}</div>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/police/cases/${item.id}`)}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => navigate(`/police/case/${item.id}`)}
+                        title="View Case"
+                      >
                         <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/police/case/${item.id}`)}
+                        className="gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        AI Assistant
                       </Button>
                     </div>
                   </div>

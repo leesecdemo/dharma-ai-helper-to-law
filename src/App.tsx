@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PublicRegister from "./pages/public/Register";
+import CaseDiscussion from "./pages/case-discussion";
 
 // Authentication Pages
 import PoliceLogin from "./pages/police/Login";
@@ -48,22 +49,27 @@ const App = () => (
             {/* Public User Routes */}
             <Route path="/public/register" element={<PublicRegister />} />
             <Route path="/public/dashboard" element={<PublicDashboard />} />
+            <Route path="/public/case/:caseId" element={<CaseDiscussion />} />
             
             {/* Police Routes */}
             <Route path="/police/login" element={<PoliceLogin />} />
             <Route path="/police/dashboard" element={<PoliceDashboard />} />
+            <Route path="/police/case/:caseId" element={<CaseDiscussion />} />
             
             {/* Lawyer Routes */}
             <Route path="/lawyer/login" element={<LawyerLogin />} />
             <Route path="/lawyer/dashboard" element={<LawyerDashboard />} />
+            <Route path="/lawyer/case/:caseId" element={<CaseDiscussion />} />
             
             {/* Judge Routes */}
             <Route path="/judge/login" element={<JudgeLogin />} />
             <Route path="/judge/dashboard" element={<JudgeDashboard />} />
+            <Route path="/judge/case/:caseId" element={<CaseDiscussion />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/case/:caseId" element={<CaseDiscussion />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
