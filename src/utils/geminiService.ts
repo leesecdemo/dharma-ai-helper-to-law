@@ -74,6 +74,8 @@ export const generateCaseContext = (caseId: string, caseDetails: any, userRole: 
         ? "Provide information related to legal procedures, precedents, and brief preparation."
         : userRole === "judge"
         ? "Provide information related to judicial procedures, applicable laws, and judgment considerations."
+        : userRole === "admin"
+        ? "Provide comprehensive information about the case and system administration options."
         : "Provide general information about the case status and process."
     }
     

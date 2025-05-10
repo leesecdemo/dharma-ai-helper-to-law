@@ -35,7 +35,7 @@ const CaseEditor: React.FC<CaseEditorProps> = ({
       const user = { 
         id: `${userType}-123`, // This would come from auth context
         name: userName,
-        role: userType as "police" | "lawyer" | "judge" | "admin" | "public"
+        role: userType
       };
       
       const updates = {
@@ -107,3 +107,4 @@ const CaseEditor: React.FC<CaseEditorProps> = ({
 };
 
 export default CaseEditor;
+

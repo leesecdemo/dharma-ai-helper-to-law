@@ -1,10 +1,9 @@
-
 // Mock database for cases
 // In a real application, this would be replaced with an actual database
 interface CaseParticipant {
   id: string;
   name: string;
-  role: 'police' | 'lawyer' | 'judge' | 'public';
+  role: 'police' | 'lawyer' | 'judge' | 'public' | 'admin';
 }
 
 export interface CaseFile {
