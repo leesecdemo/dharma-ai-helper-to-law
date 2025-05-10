@@ -4,47 +4,49 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Users, Calendar, ArrowRight, Clock } from "lucide-react";
+import { getCases } from "@/utils/caseService";
 
 const LawyerDashboard = () => {
   const navigate = useNavigate();
   
-  // In a real app, this would be fetched from an API
+  // Get cases from case service
+  const allCases = getCases("lawyer");
+  const activeCases = allCases.filter(c => c.status !== "closed" && c.assignedTo?.some(user => user.role === "lawyer"));
+  
+  // Calculate stats
   const stats = {
-    activeCases: 12,
-    clientCount: 18,
-    upcomingHearings: 5,
-    pendingFilings: 3
+    activeCases: activeCases.length,
+    clientCount: [...new Set(activeCases.flatMap(c => c.assignedTo || []).filter(user => user.role === "public").map(user => user.id))].length || 18,
+    upcomingHearings: activeCases.filter(c => c.nextHearing).length,
+    pendingFilings: activeCases.filter(c => c.status === "assigned" && !c.lawyerBrief).length
   };
 
+  // Get cases needing lawyer briefs
+  const casesNeedingBriefs = activeCases.filter(c => !c.lawyerBrief);
+
+  // Get upcoming hearings
   const upcomingHearings = [
     { 
       id: "HR-2023-045", 
-      caseNumber: "CIV-2023-124", 
-      title: "Mehta vs Sharma", 
+      caseNumber: activeCases.length > 0 ? activeCases[0].id : "CIV-2023-124", 
+      title: activeCases.length > 0 ? activeCases[0].title : "Mehta vs Sharma", 
       date: "Tomorrow, 11:00 AM",
-      court: "Delhi High Court, Room 304" 
+      court: activeCases.length > 0 && activeCases[0].court ? activeCases[0].court : "Delhi High Court, Room 304"
     },
     { 
       id: "HR-2023-047", 
-      caseNumber: "CIV-2023-126", 
-      title: "ABC Corp vs XYZ Ltd", 
+      caseNumber: activeCases.length > 1 ? activeCases[1].id : "CIV-2023-126", 
+      title: activeCases.length > 1 ? activeCases[1].title : "ABC Corp vs XYZ Ltd", 
       date: "20 May, 2:30 PM",
-      court: "Delhi District Court, Room 201" 
+      court: activeCases.length > 1 && activeCases[1].court ? activeCases[1].court : "Delhi District Court, Room 201"
     },
     { 
       id: "HR-2023-048", 
-      caseNumber: "CRM-2023-089", 
-      title: "State vs Kumar", 
+      caseNumber: activeCases.length > 2 ? activeCases[2].id : "CRM-2023-089", 
+      title: activeCases.length > 2 ? activeCases[2].title : "State vs Kumar", 
       date: "22 May, 10:15 AM",
-      court: "Sessions Court, Room 105" 
+      court: activeCases.length > 2 && activeCases[2].court ? activeCases[2].court : "Sessions Court, Room 105"
     },
-  ];
-
-  const activeCases = [
-    { id: "CIV-2023-124", title: "Mehta vs Sharma", type: "Property Dispute", status: "Active", nextDate: "Tomorrow" },
-    { id: "CRM-2023-089", title: "State vs Kumar", type: "Criminal Defense", status: "Active", nextDate: "22 May" },
-    { id: "CIV-2023-126", title: "ABC Corp vs XYZ Ltd", type: "Contract Dispute", status: "Active", nextDate: "20 May" },
-    { id: "CIV-2023-118", title: "Singh vs Municipal Corp", type: "Public Interest", status: "Pending", nextDate: "1 Jun" },
   ];
 
   return (
@@ -94,7 +96,7 @@ const LawyerDashboard = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Filings</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Briefs</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -126,8 +128,8 @@ const LawyerDashboard = () => {
                       <div className="text-sm text-muted-foreground">{item.caseNumber}</div>
                       <div className="text-sm">{item.court}</div>
                       <div className="mt-3 flex justify-end">
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/lawyer/schedule/${item.id}`)}>
-                          View Details
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/lawyer/case/${item.caseNumber}`)}>
+                          View Case
                         </Button>
                       </div>
                     </div>
@@ -147,23 +149,33 @@ const LawyerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activeCases.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium">{item.title}</p>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <span className="mr-2">{item.id}</span>
-                        <span className="text-xs text-muted-foreground">({item.type})</span>
+                {activeCases.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No active cases to display
+                  </div>
+                ) : (
+                  activeCases.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <span className="mr-2">{item.id}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({item.status.replace('_', ' ').charAt(0).toUpperCase() + item.status.replace('_', ' ').slice(1)})
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm">
+                          {item.nextHearing ? `Next: ${item.nextHearing}` : "No hearing scheduled"}
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/lawyer/case/${item.id}`)}>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm">Next: {item.nextDate}</div>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/lawyer/cases/${item.id}`)}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
                 <Button variant="outline" className="w-full" onClick={() => navigate('/lawyer/cases')}>
                   View All Cases
                 </Button>
@@ -174,41 +186,39 @@ const LawyerDashboard = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Case Notifications</CardTitle>
+            <CardTitle>Cases Requiring Action</CardTitle>
             <CardDescription>
-              Recent updates about your cases.
+              Cases that need your legal input.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-4 border-b pb-4">
-                <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900">
-                  <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              {casesNeedingBriefs.length === 0 ? (
+                <div className="rounded-md border p-4 text-center">
+                  <p className="text-muted-foreground">All cases have been reviewed and briefed.</p>
                 </div>
-                <div>
-                  <p className="font-medium">New Document Available</p>
-                  <p className="text-sm text-muted-foreground">Police report uploaded for case CRM-2023-089</p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
-                </div>
-                <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate('/lawyer/cases/CRM-2023-089')}>
-                  View
-                </Button>
-              </div>
-              <div className="flex items-center gap-4 border-b pb-4">
-                <div className="rounded-full bg-green-100 p-2 dark:bg-green-900">
-                  <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="font-medium">Hearing Date Changed</p>
-                  <p className="text-sm text-muted-foreground">New date set for case CIV-2023-118</p>
-                  <p className="text-xs text-muted-foreground">Yesterday</p>
-                </div>
-                <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate('/lawyer/schedule')}>
-                  View
-                </Button>
-              </div>
-              <Button variant="outline" className="w-full" onClick={() => navigate('/lawyer/notifications')}>
-                View All Notifications
+              ) : (
+                casesNeedingBriefs.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 border-b pb-4 last:border-0 last:pb-0">
+                    <div className="rounded-full bg-yellow-100 p-2 dark:bg-yellow-900">
+                      <FileText className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-sm text-muted-foreground">Case {item.id} requires legal brief</p>
+                      <p className="text-xs text-muted-foreground">
+                        Filed on {item.filingDate}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/lawyer/case/${item.id}`)}>
+                      Review Case
+                    </Button>
+                  </div>
+                ))
+              )}
+              
+              <Button variant="outline" className="w-full" onClick={() => navigate('/lawyer/cases')}>
+                View All Cases
               </Button>
             </div>
           </CardContent>

@@ -1,126 +1,140 @@
 
-import React from "react";
-import { useParams, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import CaseChat from "@/components/case-chat";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import CaseViewer from "@/components/case-viewer";
+import CaseEditor from "@/components/case-editor";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { getCaseById } from "@/utils/caseService";
+import { ArrowLeft } from "lucide-react";
 
 const CaseDiscussion = () => {
   const { caseId } = useParams<{ caseId: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Extract userType from the URL path
   const pathParts = location.pathname.split("/");
   const userType = pathParts[1] as "public" | "police" | "lawyer" | "judge" | "admin";
   
-  // In a real app, these would be fetched from an API based on the caseId
-  const caseDetails = {
-    title: `Case ${caseId || "Discussion"}`,
-    description: "Case details would be loaded from the database",
-    status: "Active",
-    filingDate: "2023-04-15",
-    court: "District Court, Delhi",
-    nextHearing: "2023-05-30"
+  // State to track editing mode
+  const [editMode, setEditMode] = useState<{
+    active: boolean;
+    section: "policeReport" | "lawyerBrief" | "judgeNotes" | null;
+  }>({ active: false, section: null });
+  
+  // Generate placeholder user name based on role
+  const getUserName = () => {
+    switch(userType) {
+      case "police": return "Officer Singh";
+      case "lawyer": return "Adv. Sharma";
+      case "judge": return "Hon. Justice Patel";
+      case "admin": return "Admin User";
+      default: return "Public User";
+    }
+  };
+
+  // Fetching the case data
+  const caseData = caseId ? getCaseById(caseId) : undefined;
+  
+  // Check if user has permission to edit based on role
+  const canEdit = (section: "policeReport" | "lawyerBrief" | "judgeNotes") => {
+    if (userType === "police" && section === "policeReport") return true;
+    if (userType === "lawyer" && section === "lawyerBrief") return true;
+    if (userType === "judge" && section === "judgeNotes") return true;
+    return false;
   };
   
-  // Context for the AI about this specific case
-  const caseContext = `
-    You are assisting with case ${caseId || "unknown"}. 
-    This is a ${caseDetails.status.toLowerCase()} case filed on ${caseDetails.filingDate} at ${caseDetails.court}.
-    The next hearing is scheduled for ${caseDetails.nextHearing}.
-    Provide helpful information and guidance related to legal processes, documentation requirements, and procedural advice.
-    Do not give specific legal advice that would need to come from a qualified lawyer.
-    Your role is to assist with understanding processes and requirements, not to provide legal opinions.
-  `;
+  // Handler for edit button clicks
+  const handleEdit = (section: string) => {
+    if (section === "policeReport" || section === "lawyerBrief" || section === "judgeNotes") {
+      if (canEdit(section)) {
+        setEditMode({ active: true, section });
+      }
+    }
+  };
+  
+  // Handler for cancelling edits
+  const handleCancelEdit = () => {
+    setEditMode({ active: false, section: null });
+  };
+  
+  // Handler for saving edits
+  const handleSaveEdit = () => {
+    setEditMode({ active: false, section: null });
+  };
+  
+  // Redirect to dashboard if no case found
+  if (caseId && !caseData) {
+    return (
+      <DashboardLayout
+        userType={userType}
+        userName={getUserName()}
+      >
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <h3 className="text-lg font-semibold mb-2">Case Not Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  The requested case could not be found or you don't have permission to view it.
+                </p>
+                <Button onClick={() => navigate(`/${userType}/dashboard`)}>
+                  Return to Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
       userType={userType}
-      userName={`${userType.charAt(0).toUpperCase() + userType.slice(1)} User`}
+      userName={getUserName()}
     >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{caseDetails.title}</h1>
-          <p className="text-muted-foreground">{caseDetails.description}</p>
-        </div>
+        {/* Back button */}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => navigate(`/${userType}/dashboard`)}
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </Button>
         
-        <Tabs defaultValue="chat">
-          <TabsList>
-            <TabsTrigger value="chat">AI Assistant</TabsTrigger>
-            <TabsTrigger value="details">Case Details</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="chat" className="mt-6">
-            <CaseChat
-              caseId={caseId}
-              userRole={userType}
-              initialContext={caseContext}
-            />
-          </TabsContent>
-          
-          <TabsContent value="details" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Case Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium text-muted-foreground">Case ID</h3>
-                    <p>{caseId || "N/A"}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-muted-foreground">Status</h3>
-                    <p>{caseDetails.status}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-muted-foreground">Filing Date</h3>
-                    <p>{caseDetails.filingDate}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-muted-foreground">Court</h3>
-                    <p>{caseDetails.court}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-muted-foreground">Next Hearing</h3>
-                    <p>{caseDetails.nextHearing}</p>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="font-medium mb-2">Case Summary</h3>
-                  <p className="text-muted-foreground">
-                    This is a placeholder for the case summary. In a real application, this would contain
-                    details about the case, its history, parties involved, and current status.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="documents" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Case Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  This section would display all documents related to the case.
-                  Users could upload, download, and view documents based on their permissions.
-                </p>
-                
-                <div className="rounded-md border p-4 text-center">
-                  <p>No documents available for this demo.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Case content */}
+        {caseId && caseData && (
+          <>
+            {editMode.active && editMode.section && (
+              <Card>
+                <CardContent className="pt-6">
+                  <CaseEditor
+                    caseData={caseData}
+                    section={editMode.section}
+                    userType={userType}
+                    userName={getUserName()}
+                    onCancel={handleCancelEdit}
+                    onSave={handleSaveEdit}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            
+            {!editMode.active && (
+              <CaseViewer
+                caseId={caseId}
+                userType={userType}
+                userName={getUserName()}
+                onEdit={handleEdit}
+              />
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

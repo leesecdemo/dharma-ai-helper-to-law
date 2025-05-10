@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { sendMessageToGemini } from "@/utils/geminiService";
+import { sendMessageToGemini, ChatMessage as GeminiMessage } from "@/utils/geminiService";
 import { Loader2, Send, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,10 +32,10 @@ const CaseChat: React.FC<CaseChatProps> = ({ caseId, userRole, initialContext })
       if (!messages.length && initialContext) {
         setIsLoading(true);
         try {
-          const systemMessage = `You are an AI legal assistant for the Dharma platform. The user is a ${userRole}${caseId ? ` working on case ${caseId}` : ""}. ${initialContext || ""}`;
+          const systemPrompt = `You are an AI legal assistant for the Dharma platform. The user is a ${userRole}${caseId ? ` working on case ${caseId}` : ""}. ${initialContext || ""}`;
           
           const response = await sendMessageToGemini([
-            { role: "user", parts: systemMessage }
+            { role: "user", parts: systemPrompt }
           ]);
           
           if (response.error) {
@@ -88,8 +87,8 @@ const CaseChat: React.FC<CaseChatProps> = ({ caseId, userRole, initialContext })
 
     try {
       // Convert messages to the format expected by the Gemini API
-      const geminiMessages = messages.concat(userMessage).map(msg => ({
-        role: msg.role as "user" | "model",
+      const geminiMessages: GeminiMessage[] = messages.concat(userMessage).map(msg => ({
+        role: msg.role,
         parts: msg.content
       }));
       
@@ -127,7 +126,7 @@ const CaseChat: React.FC<CaseChatProps> = ({ caseId, userRole, initialContext })
   return (
     <Card className="flex flex-col h-[600px] w-full">
       <CardHeader className="bg-background border-b">
-        <CardTitle>Case Assistant{caseId ? ` - ${caseId}` : ""}</CardTitle>
+        <CardTitle>Case Assistant{caseId ? ` - Case ${caseId}` : ""}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col p-0">
         <div className="flex-grow overflow-y-auto p-4">
