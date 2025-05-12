@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -21,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import CaseChat from "@/components/case-chat";
 import FilesViewer from "@/components/files-viewer";
 import { getCaseById, CaseFile } from "@/utils/caseService";
+import { generateCaseContext } from "@/utils/geminiService"; // Added this import
 
 interface CaseViewerProps {
   caseId: string;

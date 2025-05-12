@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, File as FileIcon, FileText, FileImage, FileAudio, FilePdf, FileArchive, FileVideo } from "lucide-react";
+import { Download, File as FileIcon, FileText, FileImage, FileAudio, File, FileArchive, FileVideo } from "lucide-react";
 import FileUploader from "./file-uploader";
 
 interface FileAttachment {
@@ -95,7 +95,7 @@ const FilesViewer: React.FC<FilesViewerProps> = ({ caseId, userType, userName })
     if (fileType.startsWith('image/')) return <FileImage className="h-8 w-8" />;
     if (fileType.startsWith('audio/')) return <FileAudio className="h-8 w-8" />;
     if (fileType.startsWith('video/')) return <FileVideo className="h-8 w-8" />;
-    if (fileType === 'application/pdf') return <FilePdf className="h-8 w-8" />;
+    if (fileType === 'application/pdf') return <File className="h-8 w-8" />; // Changed from FilePdf to File
     if (fileType.includes('zip') || fileType.includes('compressed')) return <FileArchive className="h-8 w-8" />;
     if (fileType.includes('text') || fileType.includes('document')) return <FileText className="h-8 w-8" />;
     return <FileIcon className="h-8 w-8" />;
