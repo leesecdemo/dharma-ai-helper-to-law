@@ -3,186 +3,138 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Clock, Calendar, CheckCheck, ArrowRight } from "lucide-react";
+import { FileText, Gavel, Calendar, ArrowRight, MessageSquare } from "lucide-react";
 import { getCases } from "@/utils/caseService";
+import FloatingAssistant from "@/components/floating-assistant";
 
 const JudgeDashboard = () => {
   const navigate = useNavigate();
   
   // Get cases from case service
   const allCases = getCases("judge");
-  const assignedCases = allCases.filter(c => c.assignedTo?.some(user => user.role === "judge"));
-  const pendingJudgmentCases = assignedCases.filter(c => c.status === "pending_judgment" && !c.judgeNotes);
+  const pendingJudgmentCases = allCases.filter(c => c.status === "pending_judgment");
   
   // Calculate stats
   const stats = {
-    pendingCases: assignedCases.filter(c => c.status !== "closed").length || 127,
-    todayHearings: 8, // Would come from a calendar service in real app
-    casesDisposed: assignedCases.filter(c => c.status === "closed").length || 43,
-    judgmentsPending: pendingJudgmentCases.length || 12
+    totalCases: allCases.length,
+    pendingJudgment: pendingJudgmentCases.length,
+    upcomingHearings: allCases.filter(c => {
+      if (!c.nextHearing) return false;
+      const hearingDate = new Date(c.nextHearing);
+      const today = new Date();
+      return hearingDate >= today;
+    }).length,
+    casesWithoutNotes: allCases.filter(c => !c.judgeNotes).length,
   };
 
-  // Dummy hearings data for today - in a real app, this would come from a calendar service
-  const todayHearings = [
-    { 
-      id: "HR-2023-056", 
-      caseNumber: assignedCases.length > 0 ? assignedCases[0].id : "CRL-2023-189", 
-      title: assignedCases.length > 0 ? assignedCases[0].title : "State vs Prakash", 
-      time: "11:00 AM",
-      type: "Bail Hearing" 
-    },
-    { 
-      id: "HR-2023-057", 
-      caseNumber: assignedCases.length > 1 ? assignedCases[1].id : "CIV-2023-234", 
-      title: assignedCases.length > 1 ? assignedCases[1].title : "Gupta vs Reddy", 
-      time: "12:30 PM",
-      type: "Motion Hearing" 
-    },
-    { 
-      id: "HR-2023-058", 
-      caseNumber: assignedCases.length > 2 ? assignedCases[2].id : "CRL-2023-190", 
-      title: assignedCases.length > 2 ? assignedCases[2].title : "State vs Verma & Others", 
-      time: "2:15 PM",
-      type: "Evidence Presentation" 
-    },
-    { 
-      id: "HR-2023-059", 
-      caseNumber: assignedCases.length > 3 ? assignedCases[3].id : "CIV-2023-235", 
-      title: assignedCases.length > 3 ? assignedCases[3].title : "Kumar vs Municipal Corp.", 
-      time: "3:30 PM",
-      type: "Final Arguments" 
-    },
-  ];
+  // Get upcoming hearings
+  const upcomingHearings = allCases
+    .filter(c => c.nextHearing)
+    .sort((a, b) => {
+      const aDate = new Date(a.nextHearing || "");
+      const bDate = new Date(b.nextHearing || "");
+      return aDate.getTime() - bDate.getTime();
+    })
+    .slice(0, 4);
 
   return (
     <DashboardLayout userType="judge" userName="Hon. Justice Patel">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Judicial Dashboard</h1>
-          <p className="text-muted-foreground">Manage your case docket and court schedule.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Judge Dashboard</h1>
+          <p className="text-muted-foreground">Manage cases, hearings, and judgments.</p>
         </div>
         
+        {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Cases</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Cases</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingCases}</div>
+              <div className="text-2xl font-bold">{stats.totalCases}</div>
               <p className="text-xs text-muted-foreground">
-                In your current docket
+                All assigned cases
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Hearings</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Judgment</CardTitle>
+              <Gavel className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingJudgment}</div>
+              <p className="text-xs text-muted-foreground">
+                Cases awaiting judgment
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Upcoming Hearings</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.todayHearings}</div>
+              <div className="text-2xl font-bold">{stats.upcomingHearings}</div>
               <p className="text-xs text-muted-foreground">
-                Scheduled for today
+                Scheduled hearings
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cases Disposed</CardTitle>
-              <CheckCheck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Pending Notes</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.casesDisposed}</div>
+              <div className="text-2xl font-bold">{stats.casesWithoutNotes}</div>
               <p className="text-xs text-muted-foreground">
-                In the past 30 days
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Judgments Pending</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.judgmentsPending}</div>
-              <p className="text-xs text-muted-foreground">
-                Requires attention
+                Cases without judge notes
               </p>
             </CardContent>
           </Card>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Hearings</CardTitle>
-            <CardDescription>
-              Scheduled cases for today in your courtroom.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {todayHearings.map((item, index) => (
-                <div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                      <span className="font-bold text-primary">{index + 1}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{item.title}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{item.caseNumber}</span>
-                        <span>•</span>
-                        <span>{item.type}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold">{item.time}</p>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => navigate(`/judge/case/${item.caseNumber}`)}
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" className="w-full" onClick={() => navigate('/judge/hearings')}>
-                View Full Schedule
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="lg:col-span-4">
             <CardHeader>
               <CardTitle>Pending Judgments</CardTitle>
               <CardDescription>
-                Cases requiring judgment pronouncement.
+                Cases that require your judgment.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {pendingJudgmentCases.length === 0 ? (
-                  <div className="rounded-md border p-4 text-center">
-                    <p className="text-muted-foreground">No pending judgments at this time.</p>
+                  <div className="text-center py-6 text-muted-foreground">
+                    No pending judgments
                   </div>
                 ) : (
-                  pendingJudgmentCases.slice(0, 2).map((item) => (
-                    <div key={item.id} className="rounded-md bg-amber-50 p-4 dark:bg-amber-900/20">
-                      <p className="font-semibold text-amber-800 dark:text-amber-300">{item.id}: {item.title}</p>
-                      <p className="text-sm text-amber-600 dark:text-amber-400">
-                        Case in progress since {item.filingDate}
-                      </p>
-                      <div className="mt-3 flex justify-end">
+                  pendingJudgmentCases.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <span className="mr-2">{item.id}</span>
+                          <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
+                            Pending Judgment
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/judge/case/${item.id}`)}
+                          title="View Case"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="outline" 
-                          size="sm" 
+                          size="sm"
                           onClick={() => navigate(`/judge/case/${item.id}`)}
                         >
                           Review Case
@@ -192,66 +144,60 @@ const JudgeDashboard = () => {
                   ))
                 )}
                 
-                <Button variant="outline" className="w-full" onClick={() => navigate('/judge/judgments')}>
-                  View All Pending Judgments
+                <Button variant="outline" className="w-full" onClick={() => navigate('/judge/cases')}>
+                  View All Cases
                 </Button>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Case Notifications</CardTitle>
-              <CardDescription>
-                Recent updates in your assigned cases.
-              </CardDescription>
+              <CardTitle>Upcoming Hearings</CardTitle>
+              <CardDescription>Your scheduled court hearings.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-4 border-b pb-4">
-                  <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900">
-                    <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                {upcomingHearings.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No upcoming hearings scheduled
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">New Case Assignment</p>
-                    <p className="text-sm text-muted-foreground">
-                      Case {allCases.length > 0 ? allCases[0].id : "CIV-2023-240"} has been assigned to your court
-                    </p>
-                    <p className="text-xs text-muted-foreground">1 hour ago</p>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate(`/judge/case/${allCases.length > 0 ? allCases[0].id : "CIV-2023-240"}`)}
-                  >
-                    View
-                  </Button>
-                </div>
+                ) : (
+                  upcomingHearings.map((item) => (
+                    <div key={item.id} className="rounded-md bg-blue-50 p-4 dark:bg-blue-900/20">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900">
+                          <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-blue-800 dark:text-blue-300">{item.title}</h4>
+                          <p className="text-sm text-blue-600 dark:text-blue-400">
+                            {item.court} - {item.nextHearing}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/judge/case/${item.id}`)}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
                 
-                <div className="flex items-center gap-4 border-b pb-4">
-                  <div className="rounded-full bg-green-100 p-2 dark:bg-green-900">
-                    <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Schedule Change</p>
-                    <p className="text-sm text-muted-foreground">
-                      Hearing rescheduled for case {allCases.length > 1 ? allCases[1].id : "CRL-2023-189"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Yesterday</p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/judge/schedule')}>
-                    View
-                  </Button>
-                </div>
-                
-                <Button variant="outline" className="w-full" onClick={() => navigate('/judge/notifications')}>
-                  View All Notifications
+                <Button variant="outline" className="w-full" onClick={() => navigate('/judge/hearings')}>
+                  View All Hearings
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+      <FloatingAssistant userType="judge" userName="Hon. Justice Patel" />
     </DashboardLayout>
   );
 };

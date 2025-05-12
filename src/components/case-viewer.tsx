@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -20,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Users, Calendar, Clock, MessageSquare, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CaseChat from "@/components/case-chat";
+import FilesViewer from "@/components/files-viewer";
 import { getCaseById, CaseFile } from "@/utils/caseService";
 
 interface CaseViewerProps {
@@ -61,29 +61,7 @@ const CaseViewer: React.FC<CaseViewerProps> = ({
   }
 
   // Generate context for the AI based on the case and user role
-  const caseContext = `
-    You are assisting with case ${caseId || "unknown"}. 
-    This is a ${caseData.status} case filed on ${caseData.filingDate} ${caseData.court ? `at ${caseData.court}` : ""}.
-    ${caseData.nextHearing ? `The next hearing is scheduled for ${caseData.nextHearing}.` : ""}
-    
-    ${caseData.policeReport ? `Police Report: ${caseData.policeReport}` : "No police report has been filed yet."}
-    ${caseData.lawyerBrief ? `Lawyer Brief: ${caseData.lawyerBrief}` : "No lawyer brief has been filed yet."}
-    ${caseData.judgeNotes ? `Judge Notes: ${caseData.judgeNotes}` : ""}
-    
-    You are speaking to a ${userType} user named ${userName}.
-    ${
-      userType === "police"
-        ? "Provide information related to investigation procedures, evidence collection, and report filing requirements."
-        : userType === "lawyer"
-        ? "Provide information related to legal procedures, precedents, and brief preparation."
-        : userType === "judge"
-        ? "Provide information related to judicial procedures, applicable laws, and judgment considerations."
-        : "Provide general information about the case status and process."
-    }
-    
-    Do not give specific legal advice that would need to come from a qualified professional.
-    Your role is to assist with understanding processes and requirements.
-  `;
+  const caseContext = generateCaseContext(caseId, caseData, userType);
 
   const getStatusBadge = (status: CaseFile["status"]) => {
     switch (status) {
@@ -135,6 +113,7 @@ const CaseViewer: React.FC<CaseViewerProps> = ({
       <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="details">Case Details</TabsTrigger>
+          <TabsTrigger value="files">Files & Evidence</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="assistant">AI Assistant</TabsTrigger>
@@ -239,6 +218,15 @@ const CaseViewer: React.FC<CaseViewerProps> = ({
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        {/* New Files & Evidence Tab */}
+        <TabsContent value="files" className="mt-6">
+          <FilesViewer
+            caseId={caseId}
+            userType={userType}
+            userName={userName}
+          />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">

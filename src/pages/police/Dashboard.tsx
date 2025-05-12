@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Users, Folder, Clock, ArrowRight, MessageSquare } from "lucide-react";
 import { getCases } from "@/utils/caseService";
+import FloatingAssistant from "@/components/floating-assistant";
 
 const PoliceDashboard = () => {
   const navigate = useNavigate();
@@ -241,6 +242,7 @@ const PoliceDashboard = () => {
           </Card>
         </div>
       </div>
+      <FloatingAssistant userType="police" userName="Officer Singh" />
     </DashboardLayout>
   );
 };

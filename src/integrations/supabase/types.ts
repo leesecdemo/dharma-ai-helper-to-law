@@ -9,7 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      case_attachments: {
+        Row: {
+          case_id: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          uploaded_at: string
+          uploaded_by_id: string
+          uploaded_by_name: string
+          uploaded_by_role: string
+        }
+        Insert: {
+          case_id: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by_id: string
+          uploaded_by_name: string
+          uploaded_by_role: string
+        }
+        Update: {
+          case_id?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by_id?: string
+          uploaded_by_name?: string
+          uploaded_by_role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

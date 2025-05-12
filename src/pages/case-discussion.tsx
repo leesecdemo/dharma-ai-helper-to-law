@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCaseById } from "@/utils/caseService";
 import { ArrowLeft } from "lucide-react";
+import FloatingAssistant from "@/components/floating-assistant";
 
 const CaseDiscussion = () => {
   const { caseId } = useParams<{ caseId: string }>();
@@ -87,6 +88,7 @@ const CaseDiscussion = () => {
             </CardContent>
           </Card>
         </div>
+        <FloatingAssistant userType={userType} userName={getUserName()} />
       </DashboardLayout>
     );
   }
@@ -136,6 +138,7 @@ const CaseDiscussion = () => {
           </>
         )}
       </div>
+      <FloatingAssistant userType={userType} userName={getUserName()} />
     </DashboardLayout>
   );
 };

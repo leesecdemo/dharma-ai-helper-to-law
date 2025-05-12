@@ -55,21 +55,33 @@ const App = () => (
             <Route path="/police/login" element={<PoliceLogin />} />
             <Route path="/police/dashboard" element={<PoliceDashboard />} />
             <Route path="/police/case/:caseId" element={<CaseDiscussion />} />
+            <Route path="/police/cases" element={<PoliceDashboard />} />
+            <Route path="/police/evidence" element={<PoliceDashboard />} />
+            <Route path="/police/tasks" element={<PoliceDashboard />} />
             
             {/* Lawyer Routes */}
             <Route path="/lawyer/login" element={<LawyerLogin />} />
             <Route path="/lawyer/dashboard" element={<LawyerDashboard />} />
             <Route path="/lawyer/case/:caseId" element={<CaseDiscussion />} />
+            <Route path="/lawyer/cases" element={<LawyerDashboard />} />
+            <Route path="/lawyer/briefs" element={<LawyerDashboard />} />
+            <Route path="/lawyer/tasks" element={<LawyerDashboard />} />
             
             {/* Judge Routes */}
             <Route path="/judge/login" element={<JudgeLogin />} />
             <Route path="/judge/dashboard" element={<JudgeDashboard />} />
             <Route path="/judge/case/:caseId" element={<CaseDiscussion />} />
+            <Route path="/judge/cases" element={<JudgeDashboard />} />
+            <Route path="/judge/hearings" element={<JudgeDashboard />} />
+            <Route path="/judge/judgments" element={<JudgeDashboard />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/case/:caseId" element={<CaseDiscussion />} />
+            <Route path="/admin/cases" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminDashboard />} />
+            <Route path="/admin/settings" element={<AdminDashboard />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
